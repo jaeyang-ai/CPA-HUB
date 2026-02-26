@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPA 제휴마케팅 허브</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --green: #10b981;
+    --red: #ef4444;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Noto Sans KR',sans-serif;
+    min-height:100vh; overflow-x:hidden;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+
+  header {
+    z-index:100; padding:20px 40px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    background:rgba(10,10,15,0.97); backdrop-filter:blur(20px);
+    position:sticky; top:0;
+  }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo:hover .logo-text { color: var(--accent); }
+  .logo:hover .logo-icon { transform: scale(1.08); }
+  .logo .logo-icon { transition: transform 0.2s; }
+  .logo .logo-text { transition: color 0.2s; }
+  .logo-icon {
+    width:36px; height:36px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-radius:8px; display:flex; align-items:center;
+    justify-content:center; font-size:18px;
+  }
+  .logo-text { font-size:20px; font-weight:900; letter-spacing:-0.5px; }
+  .logo-text span { color:var(--accent); }
+  .header-right { display:flex; align-items:center; gap:16px; }
+  .header-meta { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); text-align:right; line-height:1.8; }
+  .add-site-btn {
+    display:flex; align-items:center; gap:8px;
+    padding:9px 18px;
+    background:linear-gradient(135deg,rgba(0,229,255,0.15),rgba(124,58,237,0.15));
+    border:1px solid var(--accent);
+    border-radius:8px; color:var(--accent);
+    font-family:'Noto Sans KR',sans-serif; font-size:13px; font-weight:700;
+    cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  }
+  .add-site-btn:hover { background:rgba(0,229,255,0.25); box-shadow:0 0 20px rgba(0,229,255,0.2); }
+
+  .tab-nav {
+    position:sticky; top:77px; z-index:99;
+    padding:0 40px;
+    background:var(--surface); border-bottom:1px solid var(--border);
+    display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
+  }
+  .tab-nav::-webkit-scrollbar { display:none; }
+  .tab-btn {
+    padding:14px 20px; background:none; border:none;
+    color:var(--muted); font-family:'Noto Sans KR',sans-serif;
+    font-size:13px; font-weight:500; cursor:pointer;
+    white-space:nowrap; position:relative; transition:color 0.2s;
+    display:flex; align-items:center; gap:8px;
+  }
+  .tab-btn::after {
+    content:''; position:absolute; bottom:0; left:0; right:0;
+    height:2px; background:var(--accent); transform:scaleX(0); transition:transform 0.2s;
+  }
+  .tab-btn.active { color:var(--accent); }
+  .tab-btn.active::after { transform:scaleX(1); }
+  .tab-btn:hover { color:var(--text); }
+  .tab-count {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:20px; padding:1px 7px;
+    font-size:10px; font-family:'Space Mono',monospace;
+  }
+  .tab-btn.active .tab-count {
+    background:rgba(0,229,255,0.15); border-color:var(--accent); color:var(--accent);
+  }
+
+  .main { position:relative; z-index:1; padding:32px 40px; }
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  .section-title {
+    font-size:12px; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:2px;
+    margin-bottom:20px; display:flex; align-items:center; gap:10px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .stats-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+  .stat-item {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:18px 20px; animation:fadeInUp 0.4s both;
+  }
+  .stat-label { font-size:11px; color:var(--muted); margin-bottom:8px; font-weight:500; }
+  .stat-value { font-family:'Space Mono',monospace; font-size:24px; font-weight:700; color:var(--accent); line-height:1; }
+  .stat-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  .sites-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; }
+
+  /* 드래그앤드롭 */
+  .site-card.dragging {
+    opacity:0.4; transform:scale(0.97);
+    border-color:var(--accent) !important;
+    box-shadow:0 0 30px rgba(0,229,255,0.3) !important;
+    cursor:grabbing !important;
+  }
+  .site-card.drag-over {
+    border-color:var(--accent2) !important;
+    box-shadow:0 0 20px rgba(124,58,237,0.4) !important;
+    transform:translateY(-4px) scale(1.01);
+  }
+  .drag-handle {
+    position:absolute; top:10px; right:10px;
+    color:var(--muted); font-size:13px; cursor:grab;
+    opacity:0; transition:opacity 0.2s;
+    z-index:10; padding:4px;
+    line-height:1;
+  }
+  .site-card:hover .drag-handle { opacity:1; }
+  .drag-hint {
+    font-size:11px; color:var(--muted); margin-bottom:12px;
+    display:flex; align-items:center; gap:6px;
+  }
+
+  .site-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:22px; cursor:pointer;
+    transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+    position:relative; overflow:hidden;
+    text-decoration:none; display:block;
+    animation:fadeInUp 0.35s both;
+  }
+  .site-card::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,transparent 60%,rgba(0,229,255,0.04));
+    opacity:0; transition:opacity 0.3s;
+  }
+  .site-card:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,229,255,0.1); }
+  .site-card:hover::before { opacity:1; }
+
+  .site-card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; }
+  .site-emoji {
+    width:42px; height:42px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+  }
+  .site-badge {
+    font-family:'Space Mono',monospace; font-size:10px;
+    padding:3px 9px; border-radius:20px; font-weight:700; letter-spacing:0.5px;
+  }
+  .badge-cpa { background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3); }
+  .badge-cpj { background:rgba(245,158,11,0.15); color:var(--accent3); border:1px solid rgba(245,158,11,0.3); }
+  .badge-cpc { background:rgba(0,229,255,0.12); color:var(--accent); border:1px solid rgba(0,229,255,0.3); }
+  .badge-multi { background:rgba(124,58,237,0.15); color:#a78bfa; border:1px solid rgba(124,58,237,0.3); }
+  .badge-custom { background:rgba(245,158,11,0.15); color:var(--accent3); border:1px solid rgba(245,158,11,0.3); }
+
+  .site-name { font-size:17px; font-weight:700; margin-bottom:3px; color:var(--text); }
+  .site-url { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:10px; }
+  .site-desc { font-size:12px; color:var(--muted); line-height:1.6; }
+  .site-card-footer {
+    margin-top:16px; padding-top:14px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .open-btn { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--accent); }
+  .open-arrow { transition:transform 0.2s; }
+  .site-card:hover .open-arrow { transform:translateX(3px); }
+
+  .delete-card-btn {
+    width:26px; height:26px; border-radius:50%;
+    background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);
+    color:var(--red); font-size:11px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.2s;
+    position:absolute; top:12px; right:12px; z-index:10;
+  }
+  .delete-card-btn:hover { background:rgba(239,68,68,0.3); }
+
+  /* 사이트 뷰어 */
+  .site-selector { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .site-select-btn {
+    padding:8px 14px; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; color:var(--muted); font-size:12px; font-weight:500;
+    cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;
+  }
+  .site-select-btn:hover,.site-select-btn.active {
+    background:rgba(0,229,255,0.1); border-color:var(--accent); color:var(--accent);
+  }
+  .iframe-panel { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .iframe-toolbar {
+    padding:12px 16px; background:var(--surface2); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .iframe-dots { display:flex; gap:6px; }
+  .iframe-dots span { width:10px; height:10px; border-radius:50%; }
+  .dot-r{background:#ef4444;} .dot-y{background:#f59e0b;} .dot-g{background:#10b981;}
+  .iframe-url-bar {
+    flex:1; background:var(--bg); border:1px solid var(--border); border-radius:6px;
+    padding:5px 12px; font-family:'Space Mono',monospace; font-size:11px; color:var(--muted);
+    display:flex; align-items:center; gap:8px;
+  }
+  .iframe-action-btn {
+    padding:5px 12px; background:none; border:1px solid var(--border); border-radius:6px;
+    color:var(--muted); font-size:11px; cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+    transition:all 0.2s; text-decoration:none; display:inline-flex; align-items:center; gap:4px;
+  }
+  .iframe-action-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .site-iframe { width:100%; height:calc(100vh - 360px); min-height:480px; border:none; display:block; }
+  .iframe-blocked {
+    display:none; flex-direction:column; align-items:center;
+    justify-content:center; height:360px; gap:16px; color:var(--muted);
+  }
+  .open-ext-btn {
+    padding:10px 22px; background:var(--accent); color:#000;
+    border:none; border-radius:8px; font-size:13px; font-weight:700;
+    font-family:'Noto Sans KR',sans-serif; cursor:pointer; text-decoration:none;
+    display:inline-flex; align-items:center; gap:6px; transition:opacity 0.2s;
+  }
+  .open-ext-btn:hover { opacity:0.85; }
+
+  /* 모달 */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.75);
+    backdrop-filter:blur(10px); z-index:1000;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.25s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:32px; width:100%; max-width:500px; margin:20px;
+    transform:translateY(24px); transition:transform 0.25s;
+    box-shadow:0 32px 80px rgba(0,0,0,0.6);
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+  .modal-title { font-size:19px; font-weight:900; margin-bottom:6px; }
+  .modal-sub { font-size:13px; color:var(--muted); margin-bottom:24px; line-height:1.7; }
+  .form-group { margin-bottom:16px; }
+  .form-label { font-size:11px; font-weight:700; color:var(--muted); margin-bottom:7px; display:block; letter-spacing:0.8px; text-transform:uppercase; }
+  .form-input {
+    width:100%; padding:11px 14px;
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:'Noto Sans KR',sans-serif; font-size:14px;
+    outline:none; transition:border-color 0.2s;
+  }
+  .form-input:focus { border-color:var(--accent); }
+  .form-input::placeholder { color:var(--muted); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .emoji-picker { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+  .emoji-opt {
+    width:38px; height:38px; border-radius:8px;
+    background:var(--surface2); border:2px solid transparent;
+    font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s;
+  }
+  .emoji-opt:hover { border-color:rgba(0,229,255,0.4); }
+  .emoji-opt.selected { border-color:var(--accent); background:rgba(0,229,255,0.1); }
+
+  /* 광고유형 선택 */
+  .ad-type-picker { display:flex; gap:10px; margin-top:8px; }
+  .ad-type-opt {
+    flex:1; padding:10px; border-radius:8px; text-align:center;
+    background:var(--surface2); border:2px solid var(--border);
+    color:var(--muted); font-family:'Space Mono',monospace;
+    font-size:13px; font-weight:700; cursor:pointer;
+    transition:all 0.18s; letter-spacing:0.5px;
+  }
+  .ad-type-opt:hover { border-color:rgba(0,229,255,0.4); color:var(--text); }
+  .ad-type-opt.selected[data-type="CPA"] { border-color:var(--green); background:rgba(16,185,129,0.15); color:var(--green); }
+  .ad-type-opt.selected[data-type="CPJ"] { border-color:var(--accent3); background:rgba(245,158,11,0.15); color:var(--accent3); }
+  .ad-type-opt.selected[data-type="CPC"] { border-color:var(--accent); background:rgba(0,229,255,0.12); color:var(--accent); }
+  .modal-actions { display:flex; gap:10px; margin-top:24px; }
+  .btn-cancel {
+    flex:1; padding:12px; background:var(--surface2); border:1px solid var(--border);
+    border-radius:8px; color:var(--muted); font-family:'Noto Sans KR',sans-serif;
+    font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s;
+  }
+  .btn-cancel:hover { color:var(--text); }
+  .btn-add {
+    flex:2; padding:12px; background:linear-gradient(135deg,var(--accent),#00b8d4);
+    border:none; border-radius:8px; color:#000;
+    font-family:'Noto Sans KR',sans-serif; font-size:14px; font-weight:900;
+    cursor:pointer; transition:opacity 0.2s;
+  }
+  .btn-add:hover { opacity:0.9; }
+
+  /* 토스트 */
+  .toast {
+    position:fixed; bottom:24px; right:24px; z-index:2000;
+    background:var(--surface2); border:1px solid var(--green); border-radius:10px;
+    padding:13px 20px; font-size:13px; font-weight:600; color:var(--green);
+    display:flex; align-items:center; gap:10px;
+    transform:translateY(80px); opacity:0; transition:all 0.3s;
+    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* 관리 탭 행 */
+  .manage-row {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px; background:var(--surface);
+    border:1px solid var(--border); border-radius:10px; margin-bottom:8px;
+  }
+  .manage-row-info { flex:1; }
+  .manage-row-name { font-size:14px; font-weight:600; }
+  .manage-row-url { font-size:11px; color:var(--muted); font-family:'Space Mono',monospace; margin-top:2px; }
+  .manage-row-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+  .row-btn {
+    padding:5px 12px; border-radius:6px; font-size:11px; cursor:pointer;
+    font-family:'Noto Sans KR',sans-serif; text-decoration:none;
+    display:inline-flex; align-items:center; transition:all 0.2s;
+  }
+  .row-btn-open { background:var(--surface2); border:1px solid var(--border); color:var(--muted); }
+  .row-btn-open:hover { border-color:var(--accent); color:var(--accent); }
+  .row-btn-edit { background:rgba(0,229,255,0.08); border:1px solid rgba(0,229,255,0.25); color:var(--accent); }
+  .row-btn-edit:hover { background:rgba(0,229,255,0.18); }
+  .row-btn-del { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:var(--red); }
+  .row-btn-del:hover { background:rgba(239,68,68,0.22); }
+
+  .empty-custom {
+    padding:40px; text-align:center; color:var(--muted); font-size:13px;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    line-height:1.8;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(14px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  @media (max-width:768px) {
+    header { padding:16px 20px; }
+    .tab-nav { padding:0 16px; }
+    .main { padding:20px; }
+    .stats-bar { grid-template-columns:repeat(2,1fr); }
+    .form-row { grid-template-columns:1fr; }
+    .header-meta { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" onclick="showTab('all', document.querySelector('.tab-btn'))" style="cursor:pointer;" title="메인으로 이동">
+    <div class="logo-icon">📡</div>
+    <div class="logo-text">CPA <span>HUB</span></div>
+  </div>
+  <div class="header-right">
+    <div class="header-meta">
+      <div id="site-count-header">-- 개 플랫폼</div>
+      <div id="current-time">--:--:--</div>
+    </div>
+    <button class="add-site-btn" onclick="openModal()">＋ 사이트 추가</button>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('all',this)">
+    🏠 전체 사이트 <span class="tab-count" id="tab-count-all">0</span>
+  </button>
+  <button class="tab-btn" onclick="showTab('viewer',this)">🌐 사이트 뷰어</button>
+  <button class="tab-btn" onclick="showTab('manage',this)">⚙️ 관리</button>
+</nav>
+
+<main class="main">
+
+  <!-- 전체 사이트 -->
+  <div id="tab-all" class="panel active">
+    <div class="stats-bar">
+      <div class="stat-item" style="animation-delay:0s">
+        <div class="stat-label">총 플랫폼</div>
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-sub">등록된 사이트</div>
+      </div>
+      <div class="stat-item" style="animation-delay:0.08s">
+        <div class="stat-label">오늘 날짜</div>
+        <div class="stat-value" id="stat-date" style="font-size:18px;padding-top:3px">--</div>
+        <div class="stat-sub" id="stat-year">----</div>
+      </div>
+      <div class="stat-item" style="animation-delay:0.16s">
+        <div class="stat-label">현재 시각</div>
+        <div class="stat-value" id="stat-clock" style="font-size:18px;padding-top:3px">--:--</div>
+        <div class="stat-sub">실시간</div>
+      </div>
+      <div class="stat-item" style="animation-delay:0.24s">
+        <div class="stat-label">요일</div>
+        <div class="stat-value" id="stat-day" style="font-size:20px;padding-top:2px">---</div>
+        <div class="stat-sub" id="stat-week"></div>
+      </div>
+    </div>
+    <div class="section-title">모든 플랫폼</div>
+    <div class="drag-hint">⠿ 카드를 드래그해서 순서를 바꿀 수 있어요</div>
+    <div class="sites-grid" id="all-grid"></div>
+  </div>
+
+  <!-- 사이트 뷰어 -->
+  <div id="tab-viewer" class="panel">
+    <div class="section-title">🌐 인라인 사이트 뷰어</div>
+    <div class="site-selector" id="viewer-btns"></div>
+    <div class="iframe-panel">
+      <div class="iframe-toolbar">
+        <div class="iframe-dots">
+          <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+        </div>
+        <div class="iframe-url-bar">
+          <span>🔒</span>
+          <span id="iframe-url-display">위에서 사이트를 선택하세요</span>
+        </div>
+        <a id="open-new-tab" href="#" target="_blank" class="iframe-action-btn">↗ 새 탭</a>
+      </div>
+      <iframe id="main-iframe" src="about:blank" class="site-iframe"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+        referrerpolicy="no-referrer"></iframe>
+      <div class="iframe-blocked" id="iframe-blocked">
+        <div style="font-size:44px">🚫</div>
+        <div style="font-size:13px;text-align:center;line-height:1.9;color:var(--muted)">이 사이트는 보안 정책으로 인해<br>인라인 표시가 차단됩니다.</div>
+        <a id="blocked-link" href="#" target="_blank" class="open-ext-btn">↗ 새 탭에서 열기</a>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.8">
+      💡 보안 정책으로 일부 사이트는 인라인 표시가 차단될 수 있어요. 그럴 땐 <strong style="color:var(--text)">새 탭</strong> 버튼을 이용하세요.
+    </div>
+  </div>
+
+  <!-- 관리 -->
+  <div id="tab-manage" class="panel">
+    <div id="manage-list"></div>
+    <div style="margin-top:32px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--muted)">⚠️ 전체 초기화</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">직접 추가한 사이트를 삭제하고, 숨긴 기본 사이트도 모두 복원해 원래 상태로 되돌립니다.</div>
+      <button onclick="resetCustomSites()"
+        style="padding:8px 20px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--red);font-family:'Noto Sans KR',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s"
+        onmouseover="this.style.background='rgba(239,68,68,0.22)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+        추가 사이트 전체 삭제
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<!-- 모달 -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">＋ 새 사이트 추가</div>
+    <div class="modal-sub">URL을 입력하면 이름이 자동으로 채워져요.<br>아이콘과 이름은 원하는 대로 바꿀 수 있어요.</div>
+
+    <div class="form-group">
+      <label class="form-label">사이트 URL *</label>
+      <input class="form-input" id="input-url" type="url" placeholder="https://example.com" oninput="autoFillName()" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">사이트 이름 *</label>
+      <input class="form-input" id="input-name" type="text" placeholder="예: 새 플랫폼" maxlength="20" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">광고유형 (선택, 복수 가능)</label>
+      <div class="ad-type-picker">
+        <div class="ad-type-opt" data-type="CPA" onclick="toggleAdType(this)">CPA</div>
+        <div class="ad-type-opt" data-type="CPJ" onclick="toggleAdType(this)">CPJ</div>
+        <div class="ad-type-opt" data-type="CPC" onclick="toggleAdType(this)">CPC</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">설명글 (선택)</label>
+      <textarea class="form-input" id="input-detail" placeholder="카드에 표시될 설명을 입력하세요.&#10;예: DB 수집 전문 플랫폼. 금융·보험 캠페인 다수." maxlength="100" style="resize:none;height:76px;line-height:1.6;padding-top:10px;"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">아이콘</label>
+      <div class="emoji-picker" id="emoji-picker"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-add" onclick="addSite()">추가하기 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 수정 모달 -->
+<div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">✏️ 사이트 수정</div>
+    <div class="modal-sub">내용을 수정하고 저장하세요.</div>
+    <input type="hidden" id="edit-id" />
+    <input type="hidden" id="edit-is-default" />
+
+    <div class="form-group">
+      <label class="form-label">사이트 URL *</label>
+      <input class="form-input" id="edit-url" type="url" placeholder="https://example.com" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">사이트 이름 *</label>
+      <input class="form-input" id="edit-name" type="text" maxlength="20" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">광고유형 (복수 가능)</label>
+      <div class="ad-type-picker" id="edit-ad-type-picker">
+        <div class="ad-type-opt" data-type="CPA" onclick="toggleEditAdType(this)">CPA</div>
+        <div class="ad-type-opt" data-type="CPJ" onclick="toggleEditAdType(this)">CPJ</div>
+        <div class="ad-type-opt" data-type="CPC" onclick="toggleEditAdType(this)">CPC</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">설명글</label>
+      <textarea class="form-input" id="edit-detail" maxlength="100" style="resize:none;height:76px;line-height:1.6;padding-top:10px;"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">아이콘</label>
+      <div class="emoji-picker" id="edit-emoji-picker"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">취소</button>
+      <button class="btn-add" onclick="saveSite()">저장하기 ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast">✅ <span id="toast-msg"></span></div>
+
+<script>
+const DEFAULT_SITES = [
+  { id:'tenping',   name:'텐핑',       url:'https://tenping.kr/',    emoji:'🎯', desc:'퍼포먼스마케터 전용. 참여·클릭·설치·제휴몰 다양한 유형',    badge:'CPA+CPC',     color:'linear-gradient(135deg,#1e3a5f,#0ea5e9)', isDefault:true },
+  { id:'dbdbdeep',  name:'디비디비딥', url:'https://www.dbdbdeep.com', emoji:'📊', desc:'DB 수집 전문 CPA 플랫폼. 금융·보험·부동산 강세',         badge:'CPA',         color:'linear-gradient(135deg,#312e81,#7c3aed)', isDefault:true },
+  { id:'albarich',  name:'알바리치',   url:'https://albarich.com/partner/merchant.list.php?cate=1&sort=wdate', emoji:'💰', desc:'파트너 광고주 목록 직접 접근 가능. 생활·교육·취업', badge:'CPA', color:'linear-gradient(135deg,#064e3b,#10b981)', isDefault:true },
+  { id:'replyalba', name:'리플알바',   url:'https://www.replyalba.com/', emoji:'💬', desc:'댓글·리플 형태의 CPA 마케팅. 바이럴 마케팅 특화',      badge:'CPA',         color:'linear-gradient(135deg,#7c2d12,#f97316)', isDefault:true },
+  { id:'dbfactory', name:'디비팩토리', url:'https://www.dbfactory.kr/',  emoji:'🏭', desc:'대량 DB 캠페인과 고단가 경쟁력 강점',                  badge:'CPA',         color:'linear-gradient(135deg,#1e293b,#475569)', isDefault:true },
+  { id:'adpot',     name:'애드팟',     url:'https://adpot.kr/',          emoji:'📣', desc:'CPA·CPJ·CPC 모든 유형. 마케터 매니저 시스템 운영',    badge:'CPA+CPJ+CPC', color:'linear-gradient(135deg,#0c4a6e,#0284c7)', isDefault:true },
+  { id:'dbsense',       name:'디비센스',     url:'https://dbsense.kr/',              emoji:'🧠', desc:'팀 제도와 지식마켓. 마케터 커뮤니티 기능 강점',              badge:'CPA+CPC',     color:'linear-gradient(135deg,#4a044e,#c026d3)', isDefault:true },
+  { id:'leaderscpa',    name:'리더스CPA',    url:'https://leaderscpa.com/',          emoji:'👑', desc:'국내 CPA 마케팅 1위 플랫폼. DB 발생 즉시 100% 확정 캠페인 운영', badge:'CPA',         color:'linear-gradient(135deg,#1a1a2e,#dc2626)', isDefault:true },
+  { id:'adpick',        name:'애드픽',       url:'https://adpick.co.kr/',            emoji:'📲', desc:'90만+ 회원 인플루언서 마케팅 플랫폼. SNS·블로그·앱 기반 수익', badge:'CPA+CPC',     color:'linear-gradient(135deg,#0f172a,#f97316)', isDefault:true },
+  { id:'linkprice',     name:'링크프라이스', url:'https://ac.linkprice.net/',        emoji:'🔗', desc:'국내 제휴마케팅 선두 기업. CPS·CPA·CPC·CPI 전방위 지원',    badge:'CPA+CPC',     color:'linear-gradient(135deg,#042f2e,#0d9488)', isDefault:true },
+  { id:'pointclick',    name:'포인트클릭',   url:'https://www.pointclick.co.kr/',    emoji:'🖱️', desc:'오퍼월 기반 리워드 광고 플랫폼. CPA·CPC·CPI 다양한 광고 유형', badge:'CPA+CPC',   color:'linear-gradient(135deg,#1e1b4b,#6366f1)', isDefault:true },
+  { id:'commissionbank',name:'커미션뱅크',   url:'https://www.commissionbank.co.kr/',emoji:'🏦', desc:'퍼포먼스 기반 제휴마케팅 플랫폼. 다양한 광고주 캠페인 운영',   badge:'CPA',         color:'linear-gradient(135deg,#0c2340,#2563eb)', isDefault:true },
+  { id:'infomaster',    name:'인포마스터',   url:'https://www.infomaster.co.kr/',    emoji:'📋', desc:'AI 콘텐츠 마케팅 정보포털. 정보몰 캠페인 및 DB 마케팅 특화',  badge:'CPA',         color:'linear-gradient(135deg,#1c1917,#78716c)', isDefault:true },
+];
+
+const EMOJIS = ['🎯','📊','💰','💬','🏭','📣','🧠','🚀','⚡','🔥','💎','🌟','📱','💻','🎪','🎁','📈','🏆','🔗','📌','💡','🌐','⚙️','🛒','🎀'];
+const GRADIENTS = [
+  'linear-gradient(135deg,#1e3a5f,#0ea5e9)',
+  'linear-gradient(135deg,#312e81,#7c3aed)',
+  'linear-gradient(135deg,#064e3b,#10b981)',
+  'linear-gradient(135deg,#7c2d12,#f97316)',
+  'linear-gradient(135deg,#0c4a6e,#0284c7)',
+  'linear-gradient(135deg,#4a044e,#c026d3)',
+  'linear-gradient(135deg,#1a1a2e,#3b82f6)',
+  'linear-gradient(135deg,#1c1917,#a3a3a3)',
+  'linear-gradient(135deg,#14532d,#86efac)',
+  'linear-gradient(135deg,#450a0a,#fca5a5)',
+];
+
+let selectedEmoji = '🌐';
+
+// ── 저장소 ──
+function getHidden() {
+  try { return JSON.parse(localStorage.getItem('cpa_hidden') || '[]'); }
+  catch { return []; }
+}
+function saveHidden(arr) { localStorage.setItem('cpa_hidden', JSON.stringify(arr)); }
+
+function getSites() {
+  try {
+    const hidden = getHidden();
+    const custom = JSON.parse(localStorage.getItem('cpa_custom') || '[]');
+    const overrides = getOverrides();
+    const visibleDefaults = DEFAULT_SITES
+      .filter(s => !hidden.includes(s.id))
+      .map(s => overrides[s.id] ? { ...s, ...overrides[s.id] } : s);
+    const allSites = [...visibleDefaults, ...custom];
+
+    // 저장된 순서 적용
+    const order = getSiteOrder();
+    if (order.length) {
+      const ordered = [];
+      order.forEach(id => {
+        const s = allSites.find(s => s.id === id);
+        if (s) ordered.push(s);
+      });
+      // 순서에 없는 새 사이트는 뒤에 추가
+      allSites.forEach(s => { if (!order.includes(s.id)) ordered.push(s); });
+      return ordered;
+    }
+    return allSites;
+  } catch { return [...DEFAULT_SITES]; }
+}
+function getCustom() {
+  try { return JSON.parse(localStorage.getItem('cpa_custom') || '[]'); }
+  catch { return []; }
+}
+function saveCustom(arr) { localStorage.setItem('cpa_custom', JSON.stringify(arr)); }
+
+// ── 유틸 ──
+function getDomain(url) {
+  try { return new URL(url).hostname.replace('www.',''); }
+  catch { return url; }
+}
+function getBadgeClass(badge) {
+  if (!badge || badge === 'CPA') return 'badge-cpa';
+  if (badge === 'CPJ') return 'badge-cpj';
+  if (badge === 'CPC') return 'badge-cpc';
+  if (badge === 'custom') return 'badge-custom';
+  return 'badge-multi';
+}
+function randomGradient() { return GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)]; }
+
+// ── 렌더 ──
+function render() {
+  const sites = getSites();
+  const custom = getCustom();
+
+  document.getElementById('stat-total').textContent = sites.length;
+  document.getElementById('tab-count-all').textContent = sites.length;
+  document.getElementById('site-count-header').textContent = sites.length + '개 플랫폼';
+
+  renderGrid(sites);
+  renderViewerBtns(sites);
+  renderManage(sites, custom);
+}
+
+function renderGrid(sites) {
+  const grid = document.getElementById('all-grid');
+  grid.innerHTML = sites.map((s, i) => `
+    <a href="${s.url}" target="_blank" class="site-card" draggable="true" data-id="${s.id}" style="animation-delay:${i*0.045}s;position:relative">
+      <span class="drag-handle" title="드래그하여 순서 변경">⠿⠿</span>
+      <div class="site-card-header">
+        <div style="display:flex;align-items:center;gap:11px">
+          <div class="site-emoji" style="background:${s.color||GRADIENTS[0]}">${s.emoji}</div>
+          <div>
+            <div class="site-name">${s.name}</div>
+            <div class="site-url">${getDomain(s.url)}</div>
+          </div>
+        </div>
+        <span class="site-badge ${getBadgeClass(s.badge)}">${s.badge||'CPA'}</span>
+      </div>
+      <div class="site-desc">${s.desc||''}</div>
+      <div class="site-card-footer">
+        <span class="open-btn">사이트 열기 <span class="open-arrow">→</span></span>
+        <span style="font-size:11px;color:var(--muted)">${s.isDefault ? '기본 제공' : '⭐ 직접 추가'}</span>
+      </div>
+    </a>
+  `).join('');
+  initDrag();
+}
+
+// ── 드래그앤드롭 ──
+let dragSrcId = null;
+
+function initDrag() {
+  const cards = document.querySelectorAll('#all-grid .site-card');
+  cards.forEach(card => {
+    card.addEventListener('dragstart', e => {
+      dragSrcId = card.dataset.id;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      // 링크 이동 막기
+      e.dataTransfer.setData('text/plain', dragSrcId);
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      document.querySelectorAll('#all-grid .site-card').forEach(c => c.classList.remove('drag-over'));
+    });
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('#all-grid .site-card').forEach(c => c.classList.remove('drag-over'));
+      if (card.dataset.id !== dragSrcId) card.classList.add('drag-over');
+    });
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      e.stopPropagation(); // 링크 이동 방지
+      const targetId = card.dataset.id;
+      if (dragSrcId && targetId && dragSrcId !== targetId) {
+        reorderSites(dragSrcId, targetId);
+      }
+    });
+    // 드래그 중 링크 클릭 방지
+    card.addEventListener('click', e => {
+      if (dragSrcId) { e.preventDefault(); dragSrcId = null; }
+    });
+  });
+}
+
+function reorderSites(fromId, toId) {
+  const sites = getSites();
+  const allIds = sites.map(s => s.id);
+
+  // 저장된 순서 가져오되, 현재 사이트 기준으로 보정 (새 사이트 누락 방지)
+  let ids = [...allIds]; // 항상 현재 전체 목록 기준으로 시작
+  const savedOrder = getSiteOrder();
+  if (savedOrder.length) {
+    // 저장된 순서 중 현재 존재하는 것만 추리고, 없는 것은 뒤에 추가
+    const ordered = [];
+    savedOrder.forEach(id => { if (allIds.includes(id)) ordered.push(id); });
+    allIds.forEach(id => { if (!ordered.includes(id)) ordered.push(id); });
+    ids = ordered;
+  }
+
+  const fromIdx = ids.indexOf(fromId);
+  const toIdx   = ids.indexOf(toId);
+  if (fromIdx === -1 || toIdx === -1) return;
+
+  ids.splice(fromIdx, 1);
+  ids.splice(toIdx, 0, fromId);
+  saveSiteOrder(ids);
+  render();
+}
+
+function getSiteOrder() {
+  try { return JSON.parse(localStorage.getItem('cpa_order') || '[]'); }
+  catch { return []; }
+}
+function saveSiteOrder(arr) { localStorage.setItem('cpa_order', JSON.stringify(arr)); }
+
+function renderViewerBtns(sites) {
+  document.getElementById('viewer-btns').innerHTML = sites.map(s =>
+    `<button class="site-select-btn" onclick="loadSite('${s.url}',this,'${getDomain(s.url)}')">${s.emoji} ${s.name}</button>`
+  ).join('');
+}
+
+function renderManage(sites, custom) {
+  const defaults = sites.filter(s => s.isDefault);
+  let html = '';
+
+  html += `<div class="section-title">기본 제공 사이트 (${defaults.length}개)</div>`;
+  defaults.forEach(s => {
+    html += `<div class="manage-row">
+      <span style="font-size:20px">${s.emoji}</span>
+      <div class="manage-row-info">
+        <div class="manage-row-name">${s.name}</div>
+        <div class="manage-row-url">${getDomain(s.url)}</div>
+      </div>
+      <span class="site-badge ${getBadgeClass(s.badge)}">${s.badge||'CPA'}</span>
+      <a href="${s.url}" target="_blank" class="row-btn row-btn-open">↗ 열기</a>
+      <button onclick="openEditModal('${s.id}',true)" class="row-btn row-btn-edit">✏️ 수정</button>
+      <button onclick="deleteSite(event,'${s.id}',true)" class="row-btn row-btn-del">삭제</button>
+    </div>`;
+  });
+
+  html += `<div class="section-title" style="margin-top:28px">내가 추가한 사이트 (${custom.length}개)</div>`;
+  if (custom.length === 0) {
+    html += `<div class="empty-custom">아직 추가한 사이트가 없어요.<br>우측 상단 <strong style="color:var(--text)">＋ 사이트 추가</strong>를 눌러보세요!</div>`;
+  } else {
+    custom.forEach(s => {
+      html += `<div class="manage-row">
+        <span style="font-size:20px">${s.emoji}</span>
+        <div class="manage-row-info">
+          <div class="manage-row-name">${s.name}</div>
+          <div class="manage-row-url">${getDomain(s.url)}</div>
+          ${s.desc ? `<div class="manage-row-desc">${s.desc}</div>` : ''}
+        </div>
+        <a href="${s.url}" target="_blank" class="row-btn row-btn-open">↗ 열기</a>
+        <button onclick="openEditModal('${s.id}',false)" class="row-btn row-btn-edit">✏️ 수정</button>
+        <button onclick="deleteSite(event,'${s.id}')" class="row-btn row-btn-del">삭제</button>
+      </div>`;
+    });
+  }
+
+  document.getElementById('manage-list').innerHTML = html;
+}
+
+// ── 탭 ──
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  (btn||event.currentTarget).classList.add('active');
+}
+
+// ── 뷰어 ──
+function loadSite(url, btn, displayUrl) {
+  document.querySelectorAll('#viewer-btns .site-select-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('iframe-url-display').textContent = displayUrl;
+  document.getElementById('open-new-tab').href = url;
+  document.getElementById('blocked-link').href = url;
+  const iframe = document.getElementById('main-iframe');
+  iframe.style.display = 'block';
+  document.getElementById('iframe-blocked').style.display = 'none';
+  iframe.src = url;
+}
+
+// ── 모달 ──
+function buildEmojiPicker() {
+  document.getElementById('emoji-picker').innerHTML = EMOJIS.map(e =>
+    `<div class="emoji-opt${e===selectedEmoji?' selected':''}" onclick="selectEmoji('${e}',this)">${e}</div>`
+  ).join('');
+}
+
+function selectEmoji(e, el) {
+  selectedEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleAdType(el) {
+  el.classList.toggle('selected');
+}
+
+function getSelectedAdTypes() {
+  const selected = [...document.querySelectorAll('.ad-type-opt.selected')].map(el => el.dataset.type);
+  return selected.length ? selected.join('+') : 'custom';
+}
+
+function openModal() {
+  document.getElementById('input-url').value = '';
+  document.getElementById('input-name').value = '';
+  document.getElementById('input-detail').value = '';
+  document.querySelectorAll('.ad-type-opt').forEach(el => el.classList.remove('selected'));
+  selectedEmoji = '🌐';
+  buildEmojiPicker();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('input-url').focus(), 200);
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if(e.target.id==='modal-overlay') closeModal(); }
+
+function autoFillName() {
+  const url = document.getElementById('input-url').value.trim();
+  const nameEl = document.getElementById('input-name');
+  if (!nameEl.value && url) {
+    try {
+      const full = url.startsWith('http') ? url : 'https://'+url;
+      const domain = new URL(full).hostname.replace('www.','').split('.')[0];
+      nameEl.value = domain.charAt(0).toUpperCase() + domain.slice(1);
+    } catch{}
+  }
+}
+
+function addSite() {
+  let url = document.getElementById('input-url').value.trim();
+  const name = document.getElementById('input-name').value.trim();
+  const detail = document.getElementById('input-detail').value.trim();
+  const badge = getSelectedAdTypes();
+
+  if (!url) { highlight('input-url'); return; }
+  if (!name) { highlight('input-name'); return; }
+  if (!url.startsWith('http')) url = 'https://' + url;
+
+  const custom = getCustom();
+  custom.push({
+    id: 'c_' + Date.now(),
+    name, url,
+    desc: detail || '직접 추가한 사이트',
+    emoji: selectedEmoji,
+    badge,
+    color: randomGradient(),
+    isDefault: false,
+  });
+  saveCustom(custom);
+  closeModal();
+  render();
+  showToast(`"${name}" 추가 완료!`);
+}
+
+// ── 수정 모달 ──
+let editSelectedEmoji = '🌐';
+
+function openEditModal(id, isDefault) {
+  // 현재 사이트 데이터 찾기
+  const allSites = getSites();
+  // 기본 사이트는 덮어쓴 데이터(overrides)도 확인
+  const overrides = getOverrides();
+  let site = overrides[id] || allSites.find(s => s.id === id);
+  if (!site) return;
+
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-is-default').value = isDefault ? 'true' : 'false';
+  document.getElementById('edit-url').value = site.url;
+  document.getElementById('edit-name').value = site.name;
+  document.getElementById('edit-detail').value = site.desc || '';
+
+  // 광고유형 세팅
+  const types = (site.badge || '').split('+');
+  document.querySelectorAll('#edit-ad-type-picker .ad-type-opt').forEach(el => {
+    el.classList.toggle('selected', types.includes(el.dataset.type));
+  });
+
+  // 이모지 세팅
+  editSelectedEmoji = site.emoji || '🌐';
+  document.getElementById('edit-emoji-picker').innerHTML = EMOJIS.map(e =>
+    `<div class="emoji-opt${e===editSelectedEmoji?' selected':''}" onclick="selectEditEmoji('${e}',this)">${e}</div>`
+  ).join('');
+
+  document.getElementById('edit-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('edit-name').focus(), 200);
+}
+
+function selectEditEmoji(e, el) {
+  editSelectedEmoji = e;
+  document.querySelectorAll('#edit-emoji-picker .emoji-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleEditAdType(el) { el.classList.toggle('selected'); }
+
+function getEditSelectedAdTypes() {
+  const selected = [...document.querySelectorAll('#edit-ad-type-picker .ad-type-opt.selected')].map(el => el.dataset.type);
+  return selected.length ? selected.join('+') : 'custom';
+}
+
+function closeEditModal() { document.getElementById('edit-modal-overlay').classList.remove('open'); }
+function closeEditModalOutside(e) { if(e.target.id==='edit-modal-overlay') closeEditModal(); }
+
+// 기본 사이트 수정 내용 저장용
+function getOverrides() {
+  try { return JSON.parse(localStorage.getItem('cpa_overrides') || '{}'); }
+  catch { return {}; }
+}
+function saveOverrides(obj) { localStorage.setItem('cpa_overrides', JSON.stringify(obj)); }
+
+function saveSite() {
+  const id = document.getElementById('edit-id').value;
+  const isDefault = document.getElementById('edit-is-default').value === 'true';
+  let url = document.getElementById('edit-url').value.trim();
+  const name = document.getElementById('edit-name').value.trim();
+  const desc = document.getElementById('edit-detail').value.trim();
+  const badge = getEditSelectedAdTypes();
+  const emoji = editSelectedEmoji;
+
+  if (!url) { highlightEl('edit-url'); return; }
+  if (!name) { highlightEl('edit-name'); return; }
+  if (!url.startsWith('http')) url = 'https://' + url;
+
+  if (isDefault) {
+    // 기본 사이트: overrides에 저장
+    const overrides = getOverrides();
+    const original = DEFAULT_SITES.find(s => s.id === id);
+    overrides[id] = { ...original, url, name, desc, badge, emoji };
+    saveOverrides(overrides);
+  } else {
+    // 커스텀 사이트: custom 배열에서 찾아 수정
+    const custom = getCustom().map(s =>
+      s.id === id ? { ...s, url, name, desc, badge, emoji } : s
+    );
+    saveCustom(custom);
+  }
+
+  closeEditModal();
+  render();
+  showToast(`"${name}" 수정 완료!`);
+}
+
+function highlightEl(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--red)';
+  el.focus();
+  setTimeout(() => el.style.borderColor = '', 1600);
+}
+
+function deleteSite(e, id, isDefault) {
+  e.preventDefault(); e.stopPropagation();
+  if (isDefault) {
+    const hidden = getHidden();
+    if (!hidden.includes(id)) hidden.push(id);
+    saveHidden(hidden);
+  } else {
+    saveCustom(getCustom().filter(s => s.id !== id));
+  }
+  render();
+  showToast('사이트 삭제 완료');
+}
+
+function resetCustomSites() {
+  if (confirm('직접 추가한 사이트를 모두 삭제하고\n숨긴 기본 사이트도 모두 복원할까요?\n(기본 사이트 수정 내용도 초기화됩니다)')) {
+    saveCustom([]);
+    saveHidden([]);
+    saveOverrides({});
+    saveSiteOrder([]);
+    render();
+    showToast('전체 초기화 완료');
+  }
+}
+
+function highlight(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--red)';
+  el.focus();
+  setTimeout(() => el.style.borderColor = '', 1600);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// 시간 / 날짜 / 요일
+const WEEKDAYS = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+const WEEKDAYS_EN = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('current-time').textContent =
+    now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const d  = document.getElementById('stat-date');
+  const y  = document.getElementById('stat-year');
+  const c  = document.getElementById('stat-clock');
+  const wd = document.getElementById('stat-day');
+  const we = document.getElementById('stat-week');
+  if (d)  d.textContent  = `${now.getMonth()+1}월 ${now.getDate()}일`;
+  if (y)  y.textContent  = `${now.getFullYear()}년`;
+  if (c)  c.textContent  = now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  if (wd) wd.textContent = WEEKDAYS[now.getDay()];
+  if (we) we.textContent = WEEKDAYS_EN[now.getDay()];
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// 초기화
+render();
+</script>
+</body>
+</html>
